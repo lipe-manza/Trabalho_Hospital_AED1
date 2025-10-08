@@ -14,5 +14,7 @@
 	bool lista_vazia(LISTA *lista);
 	bool lista_cheia(LISTA *lista);
 	void lista_imprimir_pacientes(LISTA *lista);
+	bool lista_salvar_json(LISTA *lista, const char *filename);
+	bool lista_carregar_json(LISTA *lista, const char *filename);
 
 #endif

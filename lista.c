@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 #include "lista.h"
 
 typedef struct no {
@@ -227,4 +228,79 @@ void lista_imprimir_pacientes(LISTA* lista) {
         p = p->proximo;
     }
     printf("Total de pacientes Cadastrados: %d\n", lista->tamanho);
+}
+
+bool lista_salvar_json(LISTA* lista, const char *filename) {
+    if (lista == NULL || filename == NULL) return false;
+    
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        printf("ERRO: Não foi possível abrir o arquivo %s para escrita.\n", filename);
+        return false;
+    }
+    
+    fprintf(file, "{\n");
+    fprintf(file, "  \"pacientes\": [\n");
+    
+    NO* atual = lista->inicio;
+    while (atual != NULL) {
+        paciente_salvar_json(atual->paciente, file);
+        if (atual->proximo != NULL) {
+            fprintf(file, ",\n");
+        } else {
+            fprintf(file, "\n");
+        }
+        atual = atual->proximo;
+    }
+    
+    fprintf(file, "  ]\n");
+    fprintf(file, "}\n");
+    
+    fclose(file);
+    return true;
+}
+
+bool lista_carregar_json(LISTA* lista, const char *filename) {
+    if (lista == NULL || filename == NULL) return false;
+    
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        // Arquivo não existe ainda, não é erro
+        return false;
+    }
+    
+    char buffer[200];
+    int pacientes_carregados = 0;
+    
+    // Procurar pelo array de pacientes
+    while (fgets(buffer, sizeof(buffer), file)) {
+        if (strstr(buffer, "\"pacientes\"")) {
+            // Procurar pelos objetos de pacientes
+            while (fgets(buffer, sizeof(buffer), file)) {
+                if (strstr(buffer, "{")) {
+                    // Voltar para ler o objeto completo
+                    fseek(file, -strlen(buffer), SEEK_CUR);
+                    
+                    PACIENTE* p = paciente_carregar_json(file);
+                    if (p != NULL) {
+                        if (lista_inserir_paciente(lista, p)) {
+                            pacientes_carregados++;
+                        } else {
+                            paciente_apagar(&p);
+                        }
+                    }
+                }
+                
+                // Verificar fim do array
+                if (strstr(buffer, "]")) {
+                    break;
+                }
+            }
+            break;
+        }
+    }
+    
+    fclose(file);
+    printf("Carregados %d paciente(s) do arquivo %s\n", pacientes_carregados, filename);
+    return pacientes_carregados > 0;
 }

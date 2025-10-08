@@ -94,3 +94,80 @@ void paciente_imprimir(PACIENTE* p) {
         printf(" %d - %s\n", p->id, p->nome);
     }
 }
+
+PILHA* paciente_get_historico(PACIENTE* p) {
+    if (p != NULL) {
+        return p->historico;
+    }
+    return NULL;
+}
+
+void paciente_salvar_json(PACIENTE* p, FILE *file) {
+    if (p == NULL || file == NULL) return;
+    
+    fprintf(file, "    {\n");
+    fprintf(file, "      \"id\": %d,\n", p->id);
+    fprintf(file, "      \"nome\": \"%s\",\n", p->nome);
+    fprintf(file, "      ");
+    pilha_salvar_json(p->historico, file);
+    fprintf(file, "\n");
+    fprintf(file, "    }");
+}
+
+PACIENTE* paciente_carregar_json(FILE *file) {
+    if (file == NULL) return NULL;
+    
+    char buffer[200];
+    int id = -1;
+    char nome[100] = "";
+    
+    // Ler ID e nome
+    while (fgets(buffer, sizeof(buffer), file)) {
+        // Procurar ID
+        if (strstr(buffer, "\"id\"")) {
+            char *start = strchr(buffer, ':');
+            if (start) {
+                sscanf(start + 1, "%d", &id);
+            }
+        }
+        // Procurar nome
+        else if (strstr(buffer, "\"nome\"")) {
+            char *start = strchr(buffer, '"');
+            if (start) {
+                start = strchr(start + 1, '"'); // Pular "nome"
+                if (start) {
+                    start = strchr(start + 1, '"'); // Encontrar início do valor
+                    if (start) {
+                        start++;
+                        int i = 0;
+                        while (*start != '"' && *start != '\0' && i < 99) {
+                            nome[i++] = *start++;
+                        }
+                        nome[i] = '\0';
+                    }
+                }
+            }
+        }
+        // Procurar histórico
+        else if (strstr(buffer, "\"historico\"")) {
+            // Criar paciente com ID e nome
+            if (id >= 0 && strlen(nome) > 0) {
+                PACIENTE* p = paciente_criar(id, nome);
+                if (p != NULL) {
+                    // Voltar o ponteiro do arquivo para ler o histórico
+                    fseek(file, -strlen(buffer), SEEK_CUR);
+                    pilha_carregar_json(p->historico, file);
+                    return p;
+                }
+            }
+            return NULL;
+        }
+    }
+    
+    // Se chegou aqui, criar paciente sem histórico
+    if (id >= 0 && strlen(nome) > 0) {
+        return paciente_criar(id, nome);
+    }
+    
+    return NULL;
+}

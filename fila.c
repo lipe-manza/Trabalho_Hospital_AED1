@@ -1,6 +1,8 @@
 #include "fila.h"
+#include "lista.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 struct fila {
     PACIENTE *pacientes[TAM_FILA];
@@ -99,6 +101,81 @@ bool fila_contem_paciente(FILA *f, int id) {
     return false;
 }
 
-void load(FILA *f, char *filename) {
-    //
+bool fila_salvar_json(FILA *f, const char *filename) {
+    if (f == NULL || filename == NULL) return false;
+    
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        printf("ERRO: Não foi possível abrir o arquivo %s para escrita.\n", filename);
+        return false;
+    }
+    
+    fprintf(file, "{\n");
+    fprintf(file, "  \"fila_espera\": [\n");
+    
+    if (!fila_vazia(f)) {
+        int count = 0;
+        int i = f->inicio;
+        while (count < f->tamanho) {
+            fprintf(file, "    %d", paciente_get_id(f->pacientes[i]));
+            if (count < f->tamanho - 1) {
+                fprintf(file, ",\n");
+            } else {
+                fprintf(file, "\n");
+            }
+            i = (i + 1) % TAM_FILA;
+            count++;
+        }
+    }
+    
+    fprintf(file, "  ]\n");
+    fprintf(file, "}\n");
+    
+    fclose(file);
+    return true;
+}
+
+bool fila_carregar_json(FILA *f, void *lista_void, const char *filename) {
+    if (f == NULL || lista_void == NULL || filename == NULL) return false;
+    
+    LISTA *lista = (LISTA*)lista_void;
+    
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        // Arquivo não existe ainda, não é erro
+        return false;
+    }
+    
+    char buffer[200];
+    int pacientes_carregados = 0;
+    
+    // Procurar pelo array da fila
+    while (fgets(buffer, sizeof(buffer), file)) {
+        if (strstr(buffer, "\"fila_espera\"")) {
+            // Ler IDs
+            while (fgets(buffer, sizeof(buffer), file)) {
+                // Verificar fim do array
+                if (strstr(buffer, "]")) {
+                    break;
+                }
+                
+                // Ler ID
+                int id;
+                if (sscanf(buffer, "%d", &id) == 1) {
+                    // Buscar paciente na lista
+                    PACIENTE* p = lista_buscar_paciente(lista, id);
+                    if (p != NULL) {
+                        if (fila_inserir(f, p)) {
+                            pacientes_carregados++;
+                        }
+                    }
+                }
+            }
+            break;
+        }
+    }
+    
+    fclose(file);
+    printf("Carregados %d paciente(s).\n", pacientes_carregados);
+    return pacientes_carregados > 0;
 }

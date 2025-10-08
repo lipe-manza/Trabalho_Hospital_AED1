@@ -2,6 +2,7 @@
 #define PACIENTE_H
 
 #include <stdbool.h>
+#include <stdio.h>
 #include "pilha.h"
 
 typedef struct paciente PACIENTE;
@@ -16,5 +17,8 @@ bool paciente_imprimir_historico(PACIENTE* paciente);
 bool paciente_add_medicamento(PACIENTE* paciente, char* medicamento);
 bool paciente_remover_medicamento(PACIENTE* paciente);
 char* paciente_retirar_ultimo_medicamento(PACIENTE* paciente);
+void paciente_salvar_json(PACIENTE* paciente, FILE *file);
+PACIENTE* paciente_carregar_json(FILE *file);
+PILHA* paciente_get_historico(PACIENTE* paciente);
 
 #endif

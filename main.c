@@ -34,6 +34,15 @@ int main() {
 
     FILA* fila_de_espera = fila_criar();
     LISTA* lista_de_pacientes = lista_criar();
+    
+    // Carregar dados salvos
+    printf("===========================================\n");
+    printf("  Sistema de Gestão Hospitalar - PS\n");
+    printf("===========================================\n\n");
+    printf("Carregando dados salvos...\n");
+    lista_carregar_json(lista_de_pacientes, "pacientes.json");
+    fila_carregar_json(fila_de_espera, lista_de_pacientes, "fila.json");
+    printf("\n");
 
     do {
         choice = display_menu();
@@ -190,6 +199,12 @@ int main() {
             break;
         }
     } while (choice != 8);
+    
+    // Salvar dados antes de sair
+    printf("\nSalvando dados...\n");
+    lista_salvar_json(lista_de_pacientes, "pacientes.json");
+    fila_salvar_json(fila_de_espera, "fila.json");
+    printf("Dados salvos com sucesso!\n\n");
     
     // Limpar memória antes de sair
     fila_apagar(&fila_de_espera);

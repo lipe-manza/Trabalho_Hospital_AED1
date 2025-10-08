@@ -95,3 +95,83 @@ void pilha_imprimir(PILHA *p) {
         printf("- %s\n", p->historico[i]);
     }
 }
+
+void pilha_salvar_json(PILHA *p, FILE *file) {
+    if (p == NULL || file == NULL) return;
+    
+    fprintf(file, "\"historico\": [");
+    
+    // Salvar do topo para a base (ordem first in last out)
+    for (int i = p->topo; i >= 0; i--) {
+        fprintf(file, "\"%s\"", p->historico[i]);
+        if (i > 0) {
+            fprintf(file, ", ");
+        }
+    }
+    
+    fprintf(file, "]");
+}
+
+bool pilha_carregar_json(PILHA *p, FILE *file) {
+    if (p == NULL || file == NULL) return false;
+    
+    char buffer[200];
+    char procedimento[101];
+    int count = 0;
+    
+    // Ler até encontrar o array de histórico
+    while (fgets(buffer, sizeof(buffer), file)) {
+        if (strstr(buffer, "\"historico\"")) {
+            // Procurar pelo '['
+            char *start = strchr(buffer, '[');
+            if (start == NULL) {
+                if (fgets(buffer, sizeof(buffer), file) == NULL) return false;
+                start = strchr(buffer, '[');
+            }
+            if (start == NULL) return false;
+            
+            start++;
+            
+            // Ler procedimentos
+            while (*start != ']' && count < TAM_PILHA) {
+                // Pular espaços
+                while (*start == ' ' || *start == '\n' || *start == '\t') start++;
+                
+                if (*start == ']') break;
+                
+                // Ler string entre aspas
+                if (*start == '"') {
+                    start++;
+                    int i = 0;
+                    while (*start != '"' && *start != '\0' && i < 100) {
+                        procedimento[i++] = *start++;
+                    }
+                    procedimento[i] = '\0';
+                    
+                    // Empilhar (mas precisamos inverter a ordem para manter LIFO)
+                    if (strlen(procedimento) > 0) {
+                        strcpy(p->historico[count], procedimento);
+                        count++;
+                    }
+                    
+                    if (*start == '"') start++;
+                }
+                
+                // Pular vírgula
+                while (*start == ',' || *start == ' ' || *start == '\n' || *start == '\t') {
+                    start++;
+                    if (*start == '\0') {
+                        if (fgets(buffer, sizeof(buffer), file) == NULL) break;
+                        start = buffer;
+                    }
+                }
+            }
+            
+            // Ajustar topo (invertemos a ordem ao carregar)
+            p->topo = count - 1;
+            return true;
+        }
+    }
+    
+    return false;
+}

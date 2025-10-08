@@ -3,6 +3,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include "lista.h"
+//Reseta a cor
+#define RESET       "\033[0m"
+// Alertas e status
+#define YELLOW "\033[38;5;229m"  // Amarelo claro (atenção)
+#define RED    "\033[38;5;203m"  // Vermelho pálido (erro / emergência)
+#define CYAN   "\033[38;5;87m"   // Azul claro (info)
+#define BLUE   "\033[38;5;75m"   // Azul calmo (padrão hospitalar)
 
 typedef struct no {
     PACIENTE* paciente;
@@ -78,6 +85,7 @@ bool lista_inserir_paciente(LISTA* list, PACIENTE* paciente) {
     
     // Não permitir IDs duplicados
     if (atual != NULL && paciente_get_id(atual->paciente) == id) {
+        printf(RED"ERRO: Paciente com ID %d já está registrado. IDs duplicados não são permitidos\n"RESET, id);
         free(novo);
         return false;
     }
@@ -216,18 +224,18 @@ bool lista_cheia(LISTA* lista) {
 
 void lista_imprimir_pacientes(LISTA* lista) {
     if (lista == NULL || lista_vazia(lista)) {
-        printf("Lista vazia!\n");
+        printf(YELLOW"Lista vazia!\n"RESET);
         return;
     }
     
     NO* p = lista->inicio;
-    printf("=== Lista de Pacientes Cadastrados (ordenada por ID) ===\n");
+    printf(CYAN"=== Lista de Pacientes Cadastrados (ordenada por ID) ===\n"RESET);
     while (p != NULL) {
         paciente_imprimir(p->paciente);
         printf("\n");
         p = p->proximo;
     }
-    printf("Total de pacientes Cadastrados: %d\n", lista->tamanho);
+    printf(CYAN"Total de pacientes Cadastrados: %d\n"RESET, lista->tamanho);
 }
 
 bool lista_salvar_json(LISTA* lista, const char *filename) {
@@ -235,7 +243,7 @@ bool lista_salvar_json(LISTA* lista, const char *filename) {
     
     FILE *file = fopen(filename, "w");
     if (file == NULL) {
-        printf("ERRO: Não foi possível abrir o arquivo %s para escrita.\n", filename);
+        printf(RED"ERRO: Não foi possível abrir o arquivo %s para escrita.\n"RED, filename);
         return false;
     }
     
@@ -265,7 +273,7 @@ bool lista_carregar_json(LISTA* lista, const char *filename) {
     
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
-        // Arquivo não existe ainda, não é erro
+        printf("Não há dados, de pacientes ,salvos na lista");
         return false;
     }
     
@@ -301,6 +309,6 @@ bool lista_carregar_json(LISTA* lista, const char *filename) {
     }
     
     fclose(file);
-    printf("Carregados %d paciente(s) do arquivo %s\n", pacientes_carregados, filename);
+    printf(BLUE"Carregados %d paciente(s) do arquivo %s\n"RESET, pacientes_carregados, filename);
     return pacientes_carregados > 0;
 }

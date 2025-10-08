@@ -4,6 +4,13 @@
 #include <stdlib.h>
 #include "paciente.h"
 
+#define RESET       "\033[0m"    //Reseta a cor
+#define WHITE  "\033[38;5;255m"  // Branco (limpeza / fundo)
+// Alertas e status
+#define YELLOW "\033[38;5;229m"  // Amarelo claro (atenção)
+#define RED    "\033[38;5;203m"  // Vermelho pálido (erro / emergência)
+#define CYAN   "\033[38;5;87m"   // Azul claro (info)
+
 
 typedef struct paciente PACIENTE;
 
@@ -91,7 +98,7 @@ bool paciente_imprimir_historico(PACIENTE* p) {
 
 void paciente_imprimir(PACIENTE* p) {
     if (p != NULL) {
-        printf(" %d - %s\n", p->id, p->nome);
+        printf(WHITE" %d - %s\n"RESET, p->id, p->nome);
     }
 }
 

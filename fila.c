@@ -3,6 +3,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#define RESET       "\033[0m"
+#define YELLOW "\033[38;5;229m"  // Amarelo claro (atenção)
+#define RED    "\033[38;5;203m"  // Vermelho pálido (erro / emergência)
+#define CYAN   "\033[38;5;87m"   // Azul claro (info)
+#define BLUE   "\033[38;5;75m"   // Azul calmo (padrão hospitalar)
 
 struct fila {
     PACIENTE *pacientes[TAM_FILA];
@@ -53,7 +58,10 @@ PACIENTE *fila_inicio(FILA *f) {
 
 bool fila_inserir(FILA *f, PACIENTE *paciente) {
     if (f == NULL || paciente == NULL) return false;
-    if (fila_cheia(f)) return false;
+    if (fila_cheia(f)){
+        printf(RED"ERRO: Fila de espera cheia, não é possível inserir novo paciente.\n"RESET);
+        return false;
+    } 
     f->pacientes[f->fim] = paciente;
     f->fim = (f->fim + 1) % TAM_FILA;
     f->tamanho++;
@@ -72,18 +80,18 @@ PACIENTE *fila_remover(FILA *f) {
 
 void fila_imprimir(FILA *f) {
     if (f == NULL || fila_vazia(f)) {
-        printf("Fila vazia.\n");
+        printf(YELLOW"Fila vazia.\n"RESET);
         return;
     }
     int count = 0;
     int i = f->inicio;
-    printf("=== Fila de Espera ===\n");
+    printf(CYAN"           === Fila de Espera ===\n\n"RESET);
     while (count < f->tamanho) {
         paciente_imprimir(f->pacientes[i]);
         i = (i + 1) % TAM_FILA;
         count++;
     }
-    printf("Total na fila: %d\n", f->tamanho);
+    printf(CYAN"\nTotal na fila: %d\n"RESET, f->tamanho);
 }
 
 bool fila_contem_paciente(FILA *f, int id) {
@@ -106,7 +114,7 @@ bool fila_salvar_json(FILA *f, const char *filename) {
     
     FILE *file = fopen(filename, "w");
     if (file == NULL) {
-        printf("ERRO: Não foi possível abrir o arquivo %s para escrita.\n", filename);
+        printf(RED"ERRO: Não foi possível abrir o arquivo %s para escrita.\n"RESET, filename);
         return false;
     }
     
@@ -176,6 +184,6 @@ bool fila_carregar_json(FILA *f, void *lista_void, const char *filename) {
     }
     
     fclose(file);
-    printf("Carregados %d paciente(s).\n", pacientes_carregados);
+    printf(BLUE"Carregados %d paciente(s) do arquivo %s\n", pacientes_carregados, filename);
     return pacientes_carregados > 0;
 }

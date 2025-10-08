@@ -4,6 +4,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define RESET       "\033[0m"    // Reseta a cor
+#define WHITE  "\033[38;5;255m"  // Branco (limpeza / fundo)
+// Alertas e status
+#define YELLOW "\033[38;5;229m"  // Amarelo claro (atenção)
+#define RED    "\033[38;5;203m"  // Vermelho pálido (erro / emergência)
+#define CYAN   "\033[38;5;87m"   // Azul claro (info)
+
 struct pilha {
   char historico[TAM_PILHA][101];
   int topo;
@@ -87,12 +94,12 @@ char* pilha_desempilhar(PILHA *p) {
 
 void pilha_imprimir(PILHA *p) {
     if (p == NULL || pilha_vazia(p)) {
-        printf("Histórico vazio.\n");
+        printf(YELLOW"Histórico vazio.\n"RESET);
         return;
     }
 
     for (int i = p->topo; i >= 0; i--) {
-        printf("- %s\n", p->historico[i]);
+        printf(WHITE"%d°- %s\n"RESET, i+1,p->historico[i]);
     }
 }
 

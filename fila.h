@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include "paciente.h"
 
-#define TAM 100
+#define TAM_FILA 100
 
 typedef struct paciente PACIENTE;
 typedef struct fila FILA;
@@ -18,5 +18,6 @@ PACIENTE *fila_inicio(FILA *fila);
 bool fila_inserir(FILA *fila, PACIENTE *item);
 PACIENTE *fila_remover(FILA *fila);
 void fila_imprimir(FILA *fila);
+bool fila_contem_paciente(FILA *fila, int id);
 
 #endif

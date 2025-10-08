@@ -5,7 +5,7 @@
 #include <string.h>
 
 struct pilha {
-  char historico[TAM][101];
+  char historico[TAM_PILHA][101];
   int topo;
 };
 
@@ -42,7 +42,7 @@ bool pilha_vazia(PILHA *p) {
 bool pilha_cheia(PILHA *p) {
     if(p == NULL) return true;
 
-    if (p->topo == TAM - 1) {
+    if (p->topo == TAM_PILHA - 1) {
         return true;
     } else {
         return false;
@@ -64,7 +64,7 @@ int pilha_topo(PILHA *p) {
 }
 
 bool pilha_empilhar(PILHA *p, char* medicamento) {
-    if (p == NULL || medicamento != NULL) return false;
+    if (p == NULL || medicamento == NULL) return false;
 
     if (pilha_cheia(p)) return false;
 
@@ -73,21 +73,25 @@ bool pilha_empilhar(PILHA *p, char* medicamento) {
     return true;
 }
 
-PACIENTE *pilha_desempilhar(PILHA *p) {
+char* pilha_desempilhar(PILHA *p) {
     if (p == NULL) return NULL;
 
     if (pilha_vazia(p)) return NULL;
 
-    PACIENTE *historico = p->historico[p->topo];
+    static char historico[101];
+    strcpy(historico, p->historico[p->topo]);
     memset(p->historico[p->topo], 0, 101);
     p->topo--;
     return historico;
 }
 
 void pilha_imprimir(PILHA *p) {
-    if (p == NULL) return;
+    if (p == NULL || pilha_vazia(p)) {
+        printf("Histórico vazio.\n");
+        return;
+    }
 
     for (int i = p->topo; i >= 0; i--) {
-        printf("%s\n", p->historico[i]);
+        printf("- %s\n", p->historico[i]);
     }
 }

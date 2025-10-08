@@ -6,12 +6,14 @@
 typedef struct no {
     PACIENTE* paciente;
     NO* proximo;
+    NO* anterior;
 }NO;
 
 struct lista {
     NO* inicio;
     NO* fim;
     int tamanho;
+    bool ordenada;
 };
 
 LISTA* lista_criar() {
@@ -20,66 +22,119 @@ LISTA* lista_criar() {
         list->inicio = NULL;
         list->fim = NULL;
         list->tamanho = 0;
+        list->ordenada = true;
     }
     return list;
 }
 
-bool lista_inserir_fim(LISTA* list, PACIENTE* paciente) {
-    NO* p = (NO*)malloc(sizeof(NO));
-    if (p) {
-        p->paciente = paciente;
-        p->proximo = NULL;
-        if (list->tamanho == 0) {
-            list->inicio = p;
-        }
-        else {
-            list->fim->proximo = p;
-        }
+
+bool lista_inserir_paciente(LISTA* list, PACIENTE* paciente) {
+    if (list == NULL || paciente == NULL || lista_cheia(list)) {
+        return false;
+    }
+    
+    NO* novo = (NO*)malloc(sizeof(NO));
+    if (novo == NULL) {
+        return false;
+    }
+    
+    novo->paciente = paciente;
+    novo->proximo = NULL;
+    novo->anterior = NULL;
+    int id = paciente_get_id(paciente);
+    
+    // Lista vazia
+    if (list->tamanho == 0) {
+        list->inicio = novo;
+        list->fim = novo;
         list->tamanho++;
-        list->fim = p;
         return true;
     }
-    return false;
-}
-bool lista_inserir(LISTA* list, PACIENTE* paciente) {
-    bool x = false;
-    if (list != NULL && !(lista_cheia(list))) {
-        x = lista_inserir_fim(list, paciente);
-        return x;
+    
+    // Inserir no início (ID menor que o primeiro)
+    if (id < paciente_get_id(list->inicio->paciente)) {
+        novo->proximo = list->inicio;
+        list->inicio->anterior = novo;
+        list->inicio = novo;
+        list->tamanho++;
+        return true;
     }
+    
+    // Inserir no fim (ID maior que o último)
+    if (id > paciente_get_id(list->fim->paciente)) {
+        novo->anterior = list->fim;
+        list->fim->proximo = novo;
+        list->fim = novo;
+        list->tamanho++;
+        return true;
+    }
+    
+    // Inserir no meio - busca a posição correta
+    NO* atual = list->inicio;
+    while (atual != NULL && paciente_get_id(atual->paciente) < id) {
+        atual = atual->proximo;
+    }
+    
+    // Não permitir IDs duplicados
+    if (atual != NULL && paciente_get_id(atual->paciente) == id) {
+        free(novo);
+        return false;
+    }
+    
+    // Inserir antes de 'atual'
+    if (atual != NULL) {
+        novo->proximo = atual;
+        novo->anterior = atual->anterior;
+        if (atual->anterior != NULL) {
+            atual->anterior->proximo = novo;
+        }
+        atual->anterior = novo;
+        list->tamanho++;
+        return true;
+    }
+
+    free(novo);
     return false;
 }
 
 
 PACIENTE* lista_remover_paciente(LISTA* lista, int id) {
-    NO* a;
-    NO* p;
-    PACIENTE* paciente;
-
-    if (lista && !lista_vazia(lista)) {
-        p = lista->inicio;
-        while (p != NULL && paciente_get_id(p->paciente) != id) {
-            a = p;
-            p = p->proximo;
-        }
-        if (p != NULL) {
-            if (p == lista->inicio) {
-                lista->inicio = p->proximo;
-            }
-            else {
-                a->proximo = p->proximo;
-            }
-            if (p == lista->fim) {
-                lista->fim = a;
-            }
-            paciente = p->paciente;
-            p->proximo = NULL;
-            free(p);
-            lista->tamanho--;
-            return paciente;
-        }
+    if (lista == NULL || lista_vazia(lista)) {
+        return NULL;
     }
-    return NULL;
+
+    NO* atual = lista->inicio;
+    
+    while (atual != NULL && paciente_get_id(atual->paciente) < id) {
+        atual = atual->proximo;
+    }
+    
+    // Não encontrou ou passou do ID
+    if (atual == NULL || paciente_get_id(atual->paciente) != id) {
+        return NULL;
+    }
+    
+    PACIENTE* paciente = atual->paciente;
+    
+    // Remover o nó usando ponteiros duplos
+    if (atual->anterior != NULL) {
+        atual->anterior->proximo = atual->proximo;
+    } else {
+        // É o primeiro nó
+        lista->inicio = atual->proximo;
+    }
+    
+    if (atual->proximo != NULL) {
+        atual->proximo->anterior = atual->anterior;
+    } else {
+        // É o último nó
+        lista->fim = atual->anterior;
+    }
+    
+    free(atual);
+    lista->tamanho--;
+    
+    return paciente;
 }
 
 bool lista_apagar(LISTA** lista) {
@@ -101,27 +156,31 @@ bool lista_apagar(LISTA** lista) {
     return false;
 }
 
-PACIENTE* lista_busca_paciente_rec(NO* n, int id) {
-    if (n == NULL) {
+PACIENTE* lista_buscar_paciente(LISTA* lista, int id) {
+    if (lista == NULL || lista_vazia(lista)) {
         return NULL;
     }
-    if (paciente_get_id(n->paciente) == id) {
-        return n->paciente;
+    
+    NO* atual = lista->inicio;
+    
+    while (atual != NULL) {
+        int id_atual = paciente_get_id(atual->paciente);
+        
+        if (id_atual == id) {
+            return atual->paciente;
+        }
+        
+        // Lista ordenada: se passou do ID, não precisa continuar
+        if (id_atual > id) {
+            return NULL;
+        }
+        
+        atual = atual->proximo;
     }
-    else {
-        return lista_busca_paciente_rec(n->proximo, id);
-    }
-
-}
-
-PACIENTE* lista_busca(LISTA* lista, int id) {
-    PACIENTE* paciente;
-    if (lista != NULL) {
-        paciente = lista_busca_paciente_rec(lista->inicio, id);
-        return paciente;
-    }
+    
     return NULL;
 }
+
 
 int lista_tamanho(LISTA* lista) {
     if (lista != NULL) {
@@ -155,14 +214,17 @@ bool lista_cheia(LISTA* lista) {
 }
 
 void lista_imprimir_pacientes(LISTA* lista) {
-    NO* p;
-    if (lista != NULL && !lista_vazia(lista)) {
-        p = lista->inicio;
-        while (p != NULL) {
-            paciente_imprimir(p->paciente);
-            printf("\n");
-            p = p->proximo;
-        }
+    if (lista == NULL || lista_vazia(lista)) {
+        printf("Lista vazia!\n");
+        return;
     }
-    printf("Lista vazia!");
+    
+    NO* p = lista->inicio;
+    printf("=== Lista de Pacientes Cadastrados (ordenada por ID) ===\n");
+    while (p != NULL) {
+        paciente_imprimir(p->paciente);
+        printf("\n");
+        p = p->proximo;
+    }
+    printf("Total de pacientes Cadastrados: %d\n", lista->tamanho);
 }

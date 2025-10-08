@@ -20,14 +20,19 @@ PACIENTE* paciente_criar(int id, const char* nome) {
         strncpy(p->nome, nome, sizeof(p->nome) - 1);
         strcat(p->nome, "\0");
         p->historico = pilha_criar();
+        if (p->historico != NULL) {
+            return p;
+        }
+        return NULL;
     }
-    return p;
+    return NULL;
 }
 
 bool paciente_apagar(PACIENTE** p) {
-    if (p != NULL) {
+    if (p != NULL && *p != NULL) {
+        pilha_apagar(&(*p)->historico);
         free(*p);
-        p = NULL;
+        *p = NULL;
         return true;
     }
     return false;
@@ -58,13 +63,28 @@ bool paciente_add_medicamento(PACIENTE* p, char* medicamento) {
     }
     return false;
 }
-bool paciente_remove_medicamento(PACIENTE* p) {
+bool paciente_remover_medicamento(PACIENTE* p) {
     if (p != NULL) {
         char* medicamento = pilha_desempilhar(p->historico);
         if (medicamento != NULL) {
             return true;
         }
         return false;
+    }
+    return false;
+}
+
+char* paciente_retirar_ultimo_medicamento(PACIENTE* p) {
+    if (p != NULL) {
+        return pilha_desempilhar(p->historico);
+    }
+    return NULL;
+}
+
+bool paciente_imprimir_historico(PACIENTE* p) {
+    if (p != NULL) {
+        pilha_imprimir(p->historico);
+        return true;
     }
     return false;
 }

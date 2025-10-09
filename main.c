@@ -76,7 +76,6 @@ int main() {
         {
             int id;
             char nome[100];
-            bool flag = true;
 
             printf("Insira o ID do paciente: ");
             scanf("%d", &id);
@@ -85,20 +84,23 @@ int main() {
                 printf("Insira o ID do paciente: ");
                 scanf("%d", &id);
             }
-            printf("Insira o nome do paciente:");
-            scanf(" %[^\n]", nome);
-
+            
             // Verificar se ID já existe
-            if (lista_buscar_paciente(lista_de_pacientes, id) != NULL) {
+            PACIENTE* paciente_antigo = lista_buscar_paciente(lista_de_pacientes, id);
+            if (paciente_antigo != NULL) {
                 if (fila_contem_paciente(fila_de_espera, id)) {
-                    printf(RED"ERRO: Paciente com ID %d já está registrado. IDs duplicados não são permitidos.\n"RESET, id);
+                    printf(RED"ERRO: Paciente com ID %d já está registrado e já está na fila de espera.\n"RESET, id);
                     break;
                 }
                 else {
+                    fila_inserir(fila_de_espera, paciente_antigo);// insere o paciente ja registrado na fila
                     printf(RED"ERRO: Paciente com ID %d já está registrado.\n"RESET, id);
-                    flag = false;
+                    printf(CYAN"Paciente %s ID(%d) adicionado a fila de espera"RESET, paciente_get_name(paciente_antigo), id);
+                    break;
                 }
             }
+            printf("Insira o nome do paciente:");
+            scanf(" %[^\n]", nome);
 
 
 
@@ -114,7 +116,7 @@ int main() {
                 break;
             }
 
-            if (!lista_inserir_paciente(lista_de_pacientes, novo_paciente) && flag) {
+            if (!lista_inserir_paciente(lista_de_pacientes, novo_paciente)) {
                 printf(RED"ERRO: Não foi possível inserir o paciente na lista de pacientes.\n"RESET);
                 paciente_apagar(&novo_paciente);
             }
@@ -126,14 +128,10 @@ int main() {
                 break;
             }
 
-            if (flag) {
-                printf(CYAN "\nPaciente %s registrado com ID %d e adicionado à fila de espera.\n" RESET, nome, id);
-            }
-            else {
-                printf(CYAN "Paciente %s ID(%d) adicionado à fila de espera.\n" RESET, nome, id);
-            }
-            break; // só um break depois do if/else
 
+            printf(CYAN "\nPaciente %s registrado com ID %d e adicionado à fila de espera.\n" RESET, nome, id);
+
+            break;
 
         }
 
@@ -142,8 +140,7 @@ int main() {
             printf("Insira o ID do paciente que faleceu: ");
             int id_obito;
             scanf("%d", &id_obito);
-
-            // Verificar se o paciente existe
+ // Verificar se o paciente existe
             PACIENTE* paciente_obito = lista_buscar_paciente(lista_de_pacientes, id_obito);
             if (paciente_obito == NULL) {
                 printf(RED"ERRO: Paciente com ID %d não encontrado no sistema.\n"RESET, id_obito);

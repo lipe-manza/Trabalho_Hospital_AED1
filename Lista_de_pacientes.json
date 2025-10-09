@@ -1,24 +1,4 @@
 {
   "pacientes": [
-    {
-      "id": 20,
-      "nome": "Manzato Árvore Binária",
-      "historico": []
-    },
-    {
-      "id": 22,
-      "nome": "Pedro Hamamoto",
-      "historico": []
-    },
-    {
-      "id": 44,
-      "nome": "PARAFUSO",
-      "historico": ["furar o olho com um consolo 3 vezes por dia", "meter no Pedro hamamoto muito ate o cu dele sair pra fora"]
-    },
-    {
-      "id": 66,
-      "nome": "MACACO",
-      "historico": []
-    }
   ]
 }

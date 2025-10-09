@@ -6,22 +6,24 @@
 //Reseta a cor
 #define RESET       "\033[0m"
 // Alertas e status
-#define YELLOW "\033[38;5;229m"  // Amarelo claro (atenção)
-#define RED    "\033[38;5;203m"  // Vermelho pálido (erro / emergência)
-#define CYAN   "\033[38;5;87m"   // Azul claro (info)
-#define BLUE   "\033[38;5;75m"   // Azul calmo (padrão hospitalar)
+#define YELLOW "\033[38;5;229m"  
+#define RED    "\033[38;5;203m"  
+#define CYAN   "\033[38;5;87m"   
+#define BLUE   "\033[38;5;75m"   
 
-typedef struct no {
-    PACIENTE* paciente;
-    NO* proximo;
-    NO* anterior;
+// Struct no que contem ponteiro para strucst tipo PACIENTE e ponteiros para structs tipo NO
+typedef struct no { 
+    PACIENTE* paciente; // Paciente
+    NO* proximo; // Aponta para o proximo paciente da lista
+    NO* anterior; // Aponta para o paciente anterior da lista
 }NO;
 
+//  Lista duplamente encadeada ordenada
 struct lista {
-    NO* inicio;
-    NO* fim;
+    NO* inicio; // Ponteiro para struct tipo NO que aponta para o inicio da lista
+    NO* fim;    // Ponteiro para struct tipo NO que aponta para o fim da lista
     int tamanho;
-    bool ordenada;
+    bool ordenada; 
 };
 
 LISTA* lista_criar() {
@@ -30,12 +32,13 @@ LISTA* lista_criar() {
         list->inicio = NULL;
         list->fim = NULL;
         list->tamanho = 0;
-        list->ordenada = true;
+        list->ordenada = true; // Seta a lista para ordenada
     }
     return list;
 }
 
 
+// Função para inserir paciente de forma ordenada 
 bool lista_inserir_paciente(LISTA* list, PACIENTE* paciente) {
     if (list == NULL || paciente == NULL || lista_cheia(list)) {
         return false;
@@ -107,6 +110,7 @@ bool lista_inserir_paciente(LISTA* list, PACIENTE* paciente) {
 }
 
 
+// Função que remove o paciente reconhecido pelo seu id e busca de forma ordenada
 PACIENTE* lista_remover_paciente(LISTA* lista, int id) {
     if (lista == NULL || lista_vazia(lista)) {
         return NULL;
@@ -146,6 +150,7 @@ PACIENTE* lista_remover_paciente(LISTA* lista, int id) {
     return paciente;
 }
 
+
 bool lista_apagar(LISTA** lista) {
     NO* p;
     NO* a;
@@ -165,6 +170,7 @@ bool lista_apagar(LISTA** lista) {
     return false;
 }
 
+// Função para buscar o paciente na lista pelo seu id , busca de forma ordenada
 PACIENTE* lista_buscar_paciente(LISTA* lista, int id) {
     if (lista == NULL || lista_vazia(lista)) {
         return NULL;
@@ -210,6 +216,7 @@ bool lista_vazia(LISTA* lista) {
     return false;
 }
 
+// Função que verifica se ta cheia, fazendo um malloc já que só vai estar cheia se não tiver mais memória
 bool lista_cheia(LISTA* lista) {
     if (lista != NULL) {
         NO* p = (NO*)malloc(sizeof(NO));
@@ -222,6 +229,7 @@ bool lista_cheia(LISTA* lista) {
     return false;
 }
 
+// Imprime os pacientes de forma ordenada por ID
 void lista_imprimir_pacientes(LISTA* lista) {
     if (lista == NULL || lista_vazia(lista)) {
         printf(YELLOW"Lista vazia!\n"RESET);
@@ -238,10 +246,11 @@ void lista_imprimir_pacientes(LISTA* lista) {
     printf(CYAN"Total de pacientes Cadastrados: %d\n"RESET, lista->tamanho);
 }
 
+// Salva todos os pacientes da lista em um arquivo JSON.
 bool lista_salvar_json(LISTA* lista, const char *filename) {
     if (lista == NULL || filename == NULL) return false;
     
-    FILE *file = fopen(filename, "w");
+    FILE *file = fopen(filename, "w");  // Abre o arquivo em modo escrita
     if (file == NULL) {
         printf(RED"ERRO: Não foi possível abrir o arquivo %s para escrita.\n"RED, filename);
         return false;
@@ -251,7 +260,7 @@ bool lista_salvar_json(LISTA* lista, const char *filename) {
     fprintf(file, "  \"pacientes\": [\n");
     
     NO* atual = lista->inicio;
-    while (atual != NULL) {
+    while (atual != NULL) {  // Percorre a lista encadeada do início ao fim.
         paciente_salvar_json(atual->paciente, file);
         if (atual->proximo != NULL) {
             fprintf(file, ",\n");
@@ -268,11 +277,12 @@ bool lista_salvar_json(LISTA* lista, const char *filename) {
     return true;
 }
 
+// Carrega os pacientes de um arquivo JSON e os insere na lista encadeada.
 bool lista_carregar_json(LISTA* lista, const char *filename) {
     if (lista == NULL || filename == NULL) return false;
     
     FILE *file = fopen(filename, "r");
-    if (file == NULL) {
+    if (file == NULL) { // Abre o arquivo em modo leitura. Se não existir, retorna false e imprime mensagem.
         printf("Não há dados, de pacientes ,salvos na lista");
         return false;
     }
@@ -289,7 +299,7 @@ bool lista_carregar_json(LISTA* lista, const char *filename) {
                     // Voltar para ler o objeto completo
                     fseek(file, -strlen(buffer), SEEK_CUR);
                     
-                    PACIENTE* p = paciente_carregar_json(file);
+                    PACIENTE* p = paciente_carregar_json(file);//  Para cada objeto de paciente encontrado, utiliza paciente_carregar_json para criar a struct PACIENTE
                     if (p != NULL) {
                         if (lista_inserir_paciente(lista, p)) {
                             pacientes_carregados++;

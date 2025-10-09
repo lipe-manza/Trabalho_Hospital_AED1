@@ -4,22 +4,25 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define RESET       "\033[0m"    // Reseta a cor
-#define WHITE  "\033[38;5;255m"  // Branco (limpeza / fundo)
+// Resetar a cor
+#define RESET       "\033[0m"    
+#define WHITE  "\033[38;5;255m"  
 // Alertas e status
-#define YELLOW "\033[38;5;229m"  // Amarelo claro (atenção)
-#define RED    "\033[38;5;203m"  // Vermelho pálido (erro / emergência)
-#define CYAN   "\033[38;5;87m"   // Azul claro (info)
+#define YELLOW "\033[38;5;229m"  
+#define RED    "\033[38;5;203m"  
+#define CYAN   "\033[38;5;87m"   
 
+// Pilha sequencial 
 struct pilha {
-  char historico[TAM_PILHA][101];
-  int topo;
+  char historico[TAM_PILHA][101]; // Array de strings ou matrix de chars com 10 strings de tamanho 100 cada uma
+  int topo; // Topo da pilha
 };
 
+// Função que cria a pilha
 PILHA *pilha_criar() {
   PILHA *p = (PILHA *)malloc(sizeof(PILHA));
   if (p != NULL) {
-    p->topo = -1;
+    p->topo = -1; // Seta o topo para -1 para indicar que ta vazia
     return p;
   }
   return NULL;
@@ -32,14 +35,14 @@ void pilha_apagar(PILHA **p) {
     return;
   }
    memset((*p)->historico, 0, sizeof((*p)->historico));
-  (*p)->topo = -1;
+  (*p)->topo = -1; 
 }
 
 bool pilha_vazia(PILHA *p) {
   if (p == NULL)
     return true;
 
-  if (p->topo == -1) {
+  if (p->topo == -1) { // Verifica se o topo é -1 ou seja se esta vazia 
     return true;
   } else {
     return false;
@@ -49,7 +52,7 @@ bool pilha_vazia(PILHA *p) {
 bool pilha_cheia(PILHA *p) {
     if(p == NULL) return true;
 
-    if (p->topo == TAM_PILHA - 1) {
+    if (p->topo == TAM_PILHA - 1) { // Verifica se o topo tem indice maximo
         return true;
     } else {
         return false;
@@ -70,16 +73,18 @@ int pilha_topo(PILHA *p) {
     return p->topo;
 }
 
+// Empilha o procedimento medico na pilha
 bool pilha_empilhar(PILHA *p, char* medicamento) {
     if (p == NULL || medicamento == NULL) return false;
 
     if (pilha_cheia(p)) return false;
 
     p->topo++;
-    strcpy(p->historico[p->topo], medicamento);
+    strcpy(p->historico[p->topo], medicamento); // Adiciona o procedimento no topo da pilha
     return true;
 }
 
+// Desempilha o procedimento medico na pilha e retorna o procedimento
 char* pilha_desempilhar(PILHA *p) {
     if (p == NULL) return NULL;
 
@@ -92,6 +97,7 @@ char* pilha_desempilhar(PILHA *p) {
     return historico;
 }
 
+// Imprime a pilha
 void pilha_imprimir(PILHA *p) {
     if (p == NULL || pilha_vazia(p)) {
         printf(YELLOW"Histórico vazio.\n"RESET);
@@ -103,6 +109,7 @@ void pilha_imprimir(PILHA *p) {
     }
 }
 
+// Salva o histórico da pilha em formato JSON no arquivo fornecido  
 void pilha_salvar_json(PILHA *p, FILE *file) {
     if (p == NULL || file == NULL) return;
     
@@ -119,6 +126,7 @@ void pilha_salvar_json(PILHA *p, FILE *file) {
     fprintf(file, "]");
 }
 
+// Carrega o histórico de uma pilha a partir de um arquivo JSON
 bool pilha_carregar_json(PILHA *p, FILE *file) {
     if (p == NULL || file == NULL) return false;
     

@@ -1,34 +1,31 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
-#include <ctype.h>
 #include "paciente.h"
 #include "fila.h"
 #include "lista.h"
+
+// Resetar a cor
 #define RESET       "\033[0m"
 #define BOLD        "\033[1m"
 
 // Tons principais
-#define BLUE   "\033[38;5;75m"   // Azul calmo (padrão hospitalar)
-#define GREEN  "\033[38;5;78m"   // Verde suave (saúde)
-#define WHITE  "\033[38;5;255m"  // Branco (limpeza / fundo)
+#define BLUE   "\033[38;5;75m"   
+#define GREEN  "\033[38;5;78m"   
+#define WHITE  "\033[38;5;255m"  
 
 // Alertas e status
-#define YELLOW "\033[38;5;229m"  // Amarelo claro (atenção)
-#define RED    "\033[38;5;203m"  // Vermelho pálido (erro / emergência)
-#define CYAN   "\033[38;5;87m"   // Azul claro (info)
+#define YELLOW "\033[38;5;229m"  
+#define RED    "\033[38;5;203m"  
+#define CYAN   "\033[38;5;87m"   
 
-
-
-
-
-
-
+// Função para carregar o display de escolhas no terminal, pega a escolha e retorna ela 
 int display_menu() {
     int choice;
     printf("\n");
     printf(WHITE"==============================================\n");
     printf("Menu:\n");
+    printf("0. Mostrar lista de pacientes\n");
     printf("1. Registrar Paciente\n");
     printf("2. Registrar óbito do paciente\n");
     printf("3. Adicionar procedimento ao histórico médico\n");
@@ -48,52 +45,55 @@ int display_menu() {
     return choice;
 }
 
-
-
 int main() {
     int choice;
 
-    FILA* fila_de_espera = fila_criar();
-    LISTA* lista_de_pacientes = lista_criar();
+    FILA* fila_de_espera = fila_criar(); // Cria a fila da triagem
+    LISTA* lista_de_pacientes = lista_criar(); // Cria a lista de pacientes
 
     // Carregar dados salvos
     printf(WHITE"===========================================\n"RESET);
     printf(GREEN"   Sistema de Gestão Hospitalar - PS\n"RESET);
     printf(WHITE"===========================================\n\n"RESET);
     printf(BLUE"Carregando dados salvos...\n");
-    lista_carregar_json(lista_de_pacientes, "Lista_de_pacientes.json");
-    fila_carregar_json(fila_de_espera, lista_de_pacientes, "Fila_da_triagem.json");
+    lista_carregar_json(lista_de_pacientes, "Lista_de_pacientes.json"); // Carrega os dados salvos no json da lista de pacientes
+    fila_carregar_json(fila_de_espera, lista_de_pacientes, "Fila_da_triagem.json"); // Carrega os dados salvos no json da fila da triagem
     printf("\n");
 
 
-    //? inicio do menu e dos switchs
+    // Inicio do menu e dos switchs
     do {
         choice = display_menu();
 
         switch (choice)
         {
-        case 1:
+        case 0: // Mostrar lista de pacientes
+        {
+            lista_imprimir_pacientes(lista_de_pacientes);
+            break;
+        }
+        case 1: // Registrar Paciente
         {
             int id;
             char nome[100];
 
             printf("Insira o ID do paciente: ");
             scanf("%d", &id);
-            while (id <= 0) {// verifica se o ID é positivo
+            while (id < 0) {// verifica se o ID é positivo
                 printf(RED"ERRO: ID inválido. Por favor, insira um ID positivo.\n"RESET);
                 printf("Insira o ID do paciente: ");
                 scanf("%d", &id);
             }
-            
+
             // Verificar se ID já existe
             PACIENTE* paciente_antigo = lista_buscar_paciente(lista_de_pacientes, id);
-            if (paciente_antigo != NULL) {
-                if (fila_contem_paciente(fila_de_espera, id)) {
+            if (paciente_antigo != NULL) { // Verifica se já existe um paciente com esse id na lista de pacientes
+                if (fila_contem_paciente(fila_de_espera, id)) { // Verifica se o paciente já está na fila de espera
                     printf(RED"ERRO: Paciente com ID %d já está registrado e já está na fila de espera.\n"RESET, id);
                     break;
                 }
                 else {
-                    fila_inserir(fila_de_espera, paciente_antigo);// insere o paciente ja registrado na fila
+                    fila_inserir(fila_de_espera, paciente_antigo);// insere o paciente ja registrado na fila de espera
                     printf(RED"ERRO: Paciente com ID %d já está registrado.\n"RESET, id);
                     printf(CYAN"Paciente %s ID(%d) adicionado a fila de espera"RESET, paciente_get_name(paciente_antigo), id);
                     break;
@@ -116,11 +116,13 @@ int main() {
                 break;
             }
 
+            // Tenta inserir o paciente na lista e se não conseguir printa erro
             if (!lista_inserir_paciente(lista_de_pacientes, novo_paciente)) {
                 printf(RED"ERRO: Não foi possível inserir o paciente na lista de pacientes.\n"RESET);
                 paciente_apagar(&novo_paciente);
             }
 
+            // Tenta inserir o paciente na fila e se não conseguir printa erro
             if (!fila_inserir(fila_de_espera, novo_paciente)) {
                 printf(RED"ERRO: Não foi possível adicionar o paciente à fila de espera.\n"RESET);
                 lista_remover_paciente(lista_de_pacientes, id);
@@ -128,19 +130,19 @@ int main() {
                 break;
             }
 
-
             printf(CYAN "\nPaciente %s registrado com ID %d e adicionado à fila de espera.\n" RESET, nome, id);
 
             break;
 
         }
 
-        case 2:
+        case 2: // Registrar óbito do paciente
         {
             printf("Insira o ID do paciente que faleceu: ");
             int id_obito;
             scanf("%d", &id_obito);
- // Verificar se o paciente existe
+
+            // Verificar se o paciente existe
             PACIENTE* paciente_obito = lista_buscar_paciente(lista_de_pacientes, id_obito);
             if (paciente_obito == NULL) {
                 printf(RED"ERRO: Paciente com ID %d não encontrado no sistema.\n"RESET, id_obito);
@@ -165,17 +167,18 @@ int main() {
             }
             break;
         }
-        case 3:
+        case 3: // Adicionar procedimento ao historico medico
         {
             int id_proc;
             char procedimento[100];
             printf("Insira o ID do paciente:");
             scanf(" %d", &id_proc);
+
             PACIENTE* paciente_proc = lista_buscar_paciente(lista_de_pacientes, id_proc);
-            if (paciente_proc != NULL) {
+            if (paciente_proc != NULL) { // Verifica se o paciente do ID dado existe na lista de pacientes
                 printf("Insira o procedimento a ser adicionado ao histórico médico de %s: ", paciente_get_name(lista_buscar_paciente(lista_de_pacientes, id_proc)));
                 scanf(" %[^\n]", procedimento);
-                if (paciente_add_medicamento(paciente_proc, procedimento)) {
+                if (paciente_add_medicamento(paciente_proc, procedimento)) { // Tenta inserir no historico medico do paciente , se não conseguir printa erro 
                     printf(CYAN"\nProcedimento '%s' adicionado ao histórico do paciente %s (ID %d).\n"CYAN,
                         procedimento, paciente_get_name(paciente_proc), id_proc);
                 }
@@ -188,12 +191,14 @@ int main() {
             }
             break;
         }
-        case 4:
+        case 4: // Desfazer proxedimento do historico medico 
         {
             printf("Insira o ID do paciente para desfazer o último procedimento: ");
             int id_desfazer;
             scanf("%d", &id_desfazer);
+
             PACIENTE* paciente_desfazer = lista_buscar_paciente(lista_de_pacientes, id_desfazer);
+            // Verifica se o paciente ta na lista se estiver remove o ultimo procedimento de seru historico medico, se nao estiver printa erro
             if (paciente_desfazer != NULL) {
                 char* procedimento_removido = paciente_retirar_ultimo_medicamento(paciente_desfazer);
                 if (procedimento_removido != NULL) {
@@ -210,10 +215,10 @@ int main() {
             }
             break;
         }
-        case 5:
+        case 5:// Chamar paciente para atendimento 
         {
-            PACIENTE* paciente_atendimento = fila_remover(fila_de_espera);
-            if (paciente_atendimento != NULL) {
+            PACIENTE* paciente_atendimento = fila_remover(fila_de_espera); // Retira o primeiro da fila da triagem
+            if (paciente_atendimento != NULL) { // Verifica se o paciente existe e printa que foi chamado
                 printf(CYAN"Paciente %s (ID %d) chamado para atendimento.\n"RESET,
                     paciente_get_name(paciente_atendimento),
                     paciente_get_id(paciente_atendimento));
@@ -223,30 +228,32 @@ int main() {
             }
             break;
         }
-        case 6:
+        case 6: // Mostrar fila de espera
             fila_imprimir(fila_de_espera);
             break;
-        case 7:
+        case 7: // Mostrar historico medico do paciente
         {
             printf("Insira o ID do paciente para ver o histórico médico: ");
             int id_historico;
             scanf("%d", &id_historico);
+
+            // Verifica se o paciente ta na lista de pacientes do sistema
             PACIENTE* paciente_historico = lista_buscar_paciente(lista_de_pacientes, id_historico);
             if (paciente_historico != NULL) {
                 printf(CYAN"\n=== Histórico médico do paciente %s (ID %d) ===\n\n"RESET, paciente_get_name(paciente_historico), paciente_get_id(paciente_historico));
 
-                paciente_imprimir_historico(paciente_historico);
+                paciente_imprimir_historico(paciente_historico); // Imprime o historico do paciente (pilha)
             }
             else {
                 printf(RED"ERRO: Paciente com ID %d não encontrado.\n"RESET, id_historico);
             }
             break;
         }
-        case 8:
+        case 8: // Sair
             printf(BLUE"Encerrando o sistema...\n"RESET);
             break;
         default:
-            printf(RED"Opção inválida! Por favor, escolha uma opção entre 1 e 8.\n"RESET);
+            printf(RED"Opção inválida! Por favor, escolha uma opção entre 0 e 8.\n"RESET);
             break;
         }
     } while (choice != 8);

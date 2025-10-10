@@ -24,11 +24,12 @@ O projeto faz uso de **TADs (Tipos Abstratos de Dados)** — pilha, fila, lista 
 
 ## Estrutura do Sistema
 
-- **Lista_de_Pacientes:** Armazena todos os pacientes registrados.  
-- **Fila de Espera:** Gerencia a ordem de chegada dos pacientes.  
-- **Histórico Médico (Pilha):** Registra os procedimentos de cada paciente.  
-- **Paciente (Item):** Armazena os dados de cada paciente.  
-- **Módulo de I/O:** Responsável por salvar e carregar os dados em disco.  
+- **Lista_de_Pacientes:** Armazena todos os pacientes registrados e gerencia a persistência do histórico médico em JSON.
+- **Fila de Espera:** Gerencia a ordem de chegada dos pacientes e salva/recupera a fila em JSON.
+- **Histórico Médico (Pilha):** Registra os procedimentos de cada paciente.
+- **Paciente (Item):** Armazena os dados de cada paciente.
+
+
 
 ---
 

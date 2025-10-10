@@ -1,3 +1,26 @@
+# Arquivos objeto
+*.o
+
+# Executável
 hospital
-pacientes.json
-fila.json
+
+# Arquivos de dados gerados pelo programa
+*.json
+
+# Diretórios e arquivos temporários
+*.log
+*.tmp
+
+# Diretório de build, se existir
+/build/
+bin/
+obj/
+
+# Configurações de IDEs
+.vscode/
+.idea/
+*.code-workspace
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db

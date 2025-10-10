@@ -51,9 +51,8 @@ O projeto faz uso de **TADs (Tipos Abstratos de Dados)** — pilha, fila, lista 
 Todos os dados são salvos automaticamente ao sair do programa e recarregados ao iniciar.  
 A persistência é feita em **arquivos `.json`** contendo:
 
-- `lista_de_pacientes.json` — Lista de pacientes  
+- `lista_de_pacientes.json` — Lista de pacientes e historico médico
 - `fila_da_triagem.json` — Fila de espera  
-- `pacientes.json` — Históricos médicos  
 
 ---
 
